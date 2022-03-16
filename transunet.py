@@ -35,7 +35,6 @@ def np2th(weights, conv=False):
         weights = weights.transpose([3, 2, 0, 1])
     return torch.from_numpy(weights)
 
-
 class StdConv2d(nn.Conv2d):
 
     def forward(self, x):
@@ -181,12 +180,6 @@ class ResNetV2(nn.Module):
         return x, features[::-1]
     
 logger = logging.getLogger(__name__)
-
-def np2th(weights, conv = False):
-  "Possibly convert HWIO to OIHW"
-  if conv:
-    weights = weights.transpose([3, 2, 0, 1])
-  return torch.from_numpy(weights)
 
 def swish(x):
   return x * torch.sigmoid(x)
