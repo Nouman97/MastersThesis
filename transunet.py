@@ -540,14 +540,16 @@ class VisionTransformer(nn.Module):
               for uname, unit in block.named_children():
                   unit.load_from(res_weight, n_block=bname, n_unit=uname)
                   
-def TransUNet(num_classes):
-    try:
-        os.mkdir("imagenet21k")
-        os.system("wget https://storage.googleapis.com/vit_models/imagenet21k/R50+ViT-B_16.npz >/dev/null 2>&1")
-        os.system("mv R50+ViT-B_16.npz imagenet21k/R50+ViT-B_16.npz")
-    except Exception as e:
-        print(e)
+def TransUNet(num_classes, load_pretrained = True):
+    if load_pretrained == True:
+        try:
+            os.mkdir("imagenet21k")
+            os.system("wget https://storage.googleapis.com/vit_models/imagenet21k/R50+ViT-B_16.npz >/dev/null 2>&1")
+            os.system("mv R50+ViT-B_16.npz imagenet21k/R50+ViT-B_16.npz")
+        except Exception as e:
+            print(e)
     net = VisionTransformer(num_classes = num_classes)
-    net.load_from(weights=np.load("./imagenet21k/R50+ViT-B_16.npz"))
+    if load_pretrained == True:
+        net.load_from(weights=np.load("./imagenet21k/R50+ViT-B_16.npz"))
     return net                  
            
