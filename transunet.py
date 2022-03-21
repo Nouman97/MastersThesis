@@ -360,12 +360,12 @@ class Block(nn.Module):
             self.ffn_norm.bias.copy_(np2th(weights[pjoin(ROOT, MLP_NORM, "bias")]))
         
 class Encoder(nn.Module):
-  def __init__(self, vis):
+  def __init__(self, vis, num_layers = 12):
     super(Encoder, self).__init__()
     self.vis = vis
     self.layer = nn.ModuleList()
     self.encoder_norm = LayerNorm(768, eps = 1e-6)
-    for _ in range(12):
+    for _ in range(num_layers):
       layer = Block(vis)
       self.layer.append(copy.deepcopy(layer))
 
@@ -382,10 +382,10 @@ class Encoder(nn.Module):
     return encoded, attn_weights
 
 class Transformer(nn.Module):
-  def __init__(self, img_size, vis):
+  def __init__(self, img_size, vis, num_layers = 12):
     super(Transformer, self).__init__()
     self.embeddings = Embeddings(img_size = img_size)
-    self.encoder = Encoder(vis)
+    self.encoder = Encoder(vis, num_layers)
 
   def forward(self, input_ids):
     embedding_output, features = self.embeddings(input_ids)
@@ -462,12 +462,12 @@ class DecoderCup(nn.Module):
     return x
 
 class VisionTransformer(nn.Module):
-  def __init__(self, img_size = 224, num_classes = 21843, zero_head = False, vis = False):
+  def __init__(self, img_size = 224, num_classes = 21843, zero_head = False, vis = False, num_layers = 12):
     super(VisionTransformer, self).__init__()
     self.num_classes = num_classes
     self.zero_head = zero_head
     self.classifier = "seg"
-    self.transformer = Transformer(img_size, vis)
+    self.transformer = Transformer(img_size, vis, num_layers)
     self.decoder = DecoderCup()
     self.segmentation_head = SegmentationHead(
         in_channels = (256, 128, 64, 16)[-1], out_channels = num_classes, kernel_size = 3
