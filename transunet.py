@@ -483,7 +483,7 @@ class VisionTransformer(nn.Module):
     x = self.decoder(x, features)
     #print(x.shape)
     logits = self.segmentation_head(x)
-    return logits
+    return logits, attn_weights
 
   def load_from(self, weights):
     with torch.no_grad():
@@ -533,7 +533,7 @@ class VisionTransformer(nn.Module):
               for uname, unit in block.named_children():
                   unit.load_from(res_weight, n_block=bname, n_unit=uname)
                   
-def TransUNet(num_classes, load_pretrained = True, num_layers = 12):
+def TransUNet(num_classes, load_pretrained = True, num_layers = 12, vis = True):
     if load_pretrained == True:
         try:
             os.mkdir("imagenet21k")
@@ -541,7 +541,7 @@ def TransUNet(num_classes, load_pretrained = True, num_layers = 12):
             os.system("mv R50+ViT-B_16.npz imagenet21k/R50+ViT-B_16.npz")
         except Exception as e:
             print(e)
-    net = VisionTransformer(num_classes = num_classes, num_layers = num_layers)
+    net = VisionTransformer(num_classes = num_classes, num_layers = num_layers, vis = vis)
     if load_pretrained == True:
         net.load_from(weights=np.load("./imagenet21k/R50+ViT-B_16.npz"))
     return net                  
