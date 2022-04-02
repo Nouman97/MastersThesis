@@ -538,7 +538,7 @@ def TransUNet(num_classes, load_pretrained = True, num_layers = 12, vis = True):
         try:
             os.mkdir("imagenet21k")
             os.system("wget https://storage.googleapis.com/vit_models/imagenet21k/R50+ViT-B_16.npz >/dev/null 2>&1")
-            os.system("mv R50+ViT-B_16.npz imagenet21k/R50+ViT-B_16.npz")
+            os.system("mv R50+ViT-B_16.npz imagenet21k/R50+ViT-B_16.npz >/dev/null 2>&")
         except Exception as e:
             print(e)
     net = VisionTransformer(num_classes = num_classes, num_layers = num_layers, vis = vis)
