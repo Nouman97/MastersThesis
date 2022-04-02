@@ -757,7 +757,7 @@ def TransFuse(num_classes, load_pretrained = True):
         try:
             os.mkdir("pretrained")
             os.system("wget -O pretrained/resnet34-333f7ec4.pth https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet34-43635321.pth >/dev/null 2>&1")
-            os.system("wget -O pretrained/deit_small_patch16_224-cd65a155.pth https://dl.fbaipublicfiles.com/deit/deit_small_patch16_224-cd65a155.pth")
+            os.system("wget -O pretrained/deit_small_patch16_224-cd65a155.pth https://dl.fbaipublicfiles.com/deit/deit_small_patch16_224-cd65a155.pth >/dev/null 2>&1")
         except Exception as e:
             print(e)
     net = TransFuse_S(num_classes = num_classes, pretrained = load_pretrained)
