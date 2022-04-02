@@ -422,7 +422,7 @@ def deit(pretrained=False, **kwargs):
     
     
     
- import torch
+import torch
 import torch.nn as nn
 from torchvision.models import resnet34 as resnet
 from torch.nn import CrossEntropyLoss, Dropout, Softmax, Linear, Conv2d, LayerNorm
