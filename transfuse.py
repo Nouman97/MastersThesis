@@ -755,7 +755,7 @@ import os
 def TransFuse(num_classes, load_pretrained = True):
     if load_pretrained == True:
         try:
-            print(PRETRAINED")
+            print("PRETRAINED")
             os.mkdir("pretrained")
             os.system("wget -O pretrained/resnet34-333f7ec4.pth https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet34-43635321.pth >/dev/null 2>&1")
             os.system("wget -O pretrained/deit_small_patch16_224-cd65a155.pth https://dl.fbaipublicfiles.com/deit/deit_small_patch16_224-cd65a155.pth")
