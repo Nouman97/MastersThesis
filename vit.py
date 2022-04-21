@@ -289,7 +289,10 @@ def load_from(model, weights):
 def ViT(load_pretrained = True, num_layers = 12, vis = True):
     if load_pretrained == True:
         try:
-            os.mkdir("imagenet21k")
+            try:
+                os.mkdir("imagenet21k")
+            except Exception as e:
+                print(e)
             os.system("wget https://storage.googleapis.com/vit_models/imagenet21k/R50+ViT-B_16.npz >/dev/null 2>&1")
             os.system("wget https://storage.googleapis.com/vit_models/imagenet21k/ViT-B_16.npz >/dev/null 2>&1")
             os.system("mv R50+ViT-B_16.npz imagenet21k/R50+ViT-B_16.npz >/dev/null 2>&1")
