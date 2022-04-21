@@ -238,14 +238,14 @@ class Encoder(nn.Module):
 
     features = []
     for layer_block in self.layer:
-      x, weights = layer_block(hidden_states)
-      features.append(x)
+      hidden_states, weights = layer_block(hidden_states)
+      features.append(hidden_states)
       if self.vis:
         attn_weights.append(weights)
 
     features = features[:-1]
 
-    encoded = self.encoder_norm(x)
+    encoded = self.encoder_norm(hidden_states)
 
     features.append(encoded)
     return features, attn_weights
