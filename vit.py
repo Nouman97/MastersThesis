@@ -229,14 +229,26 @@ class Encoder(nn.Module):
   def forward(self, hidden_states):
     attn_weights = []
     count = 1
-    for layer_block in self.layer:
+    #for layer_block in self.layer:
       #print("Block: {}".format(count))
-      count += 1
-      hidden_states, weights = layer_block(hidden_states)
+      #count += 1
+      #hidden_states, weights = layer_block(hidden_states)
+      #if self.vis:
+        #attn_weights.append(weights)
+
+    features = []
+    for layer_block in self.layer:
+      x, weights = layer_block(hidden_states)
+      features.append(x)
       if self.vis:
         attn_weights.append(weights)
-    encoded = self.encoder_norm(hidden_states)
-    return encoded, attn_weights
+
+    features = features[:-1]
+
+    encoded = self.encoder_norm(x)
+
+    features.append(encoded)
+    return features, attn_weights
 
 class Transformer(nn.Module):
   def __init__(self, img_size, vis, num_layers = 12):
