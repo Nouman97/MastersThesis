@@ -311,7 +311,7 @@ def ViT(load_pretrained = True, num_layers = 12, vis = True):
             os.system("mv ViT-B_16.npz imagenet21k/ViT-B_16.npz >/dev/null 2>&1")
         except Exception as e:
             print(e)
-    net = Transformer(224, vis = vis)
+    net = Transformer(224, vis = vis, num_layers = num_layers)
     if load_pretrained == True:
         load_from(net, weights=np.load("./imagenet21k/ViT-B_16.npz"))
     return net                  
