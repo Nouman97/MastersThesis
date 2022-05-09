@@ -756,9 +756,9 @@ class Attention(nn.Module):
 
     return attention_output, weights
 
-class Mlp(nn.Module):
+class Mlp_ViT(nn.Module):
   def __init__(self):
-    super(Mlp, self).__init__()
+    super(Mlp_ViT, self).__init__()
     self.fc1 = Linear(768, 3072)
     self.fc2 = Linear(3072, 768)
     self.act_fc = ACT2FN["gelu"]
@@ -780,9 +780,9 @@ class Mlp(nn.Module):
     x = self.dropout(x)
     return x
 
-class Embeddings(nn.Module):
+class Embeddings_ViT(nn.Module):
   def __init__(self, img_size, in_channels = 3):
-    super(Embeddings, self).__init__()
+    super(Embeddings_ViT, self).__init__()
     self.hybrid = None
     img_size = _pair(img_size)
 
@@ -806,13 +806,13 @@ class Embeddings(nn.Module):
 
     return embeddings, features
 
-class Block(nn.Module):
+class Block_ViT(nn.Module):
   def __init__(self, vis):
-    super(Block, self).__init__()
+    super(Block_ViT, self).__init__()
     self.hidden_size = 768
     self.attention_norm = LayerNorm(768, eps = 1e-6)
     self.ffn_norm = LayerNorm(768, eps = 1e-6)
-    self.ffn = Mlp()
+    self.ffn = Mlp_ViT()
     self.attn = Attention(vis = True)
 
   def forward(self, x):
@@ -863,14 +863,14 @@ class Block(nn.Module):
             self.ffn_norm.weight.copy_(np2th(weights[pjoin(ROOT, MLP_NORM, "scale")]))
             self.ffn_norm.bias.copy_(np2th(weights[pjoin(ROOT, MLP_NORM, "bias")]))
         
-class Encoder(nn.Module):
+class Encoder_ViT(nn.Module):
   def __init__(self, vis, num_layers = 12):
-    super(Encoder, self).__init__()
+    super(Encoder_ViT, self).__init__()
     self.vis = vis
     self.layer = nn.ModuleList()
     self.encoder_norm = LayerNorm(768, eps = 1e-6)
     for _ in range(num_layers):
-      layer = Block(vis)
+      layer = Block_ViT(vis)
       self.layer.append(copy.deepcopy(layer))
 
   def forward(self, hidden_states):
@@ -890,11 +890,11 @@ class Encoder(nn.Module):
     features.append(encoded)
     return features, attn_weights
 
-class Transformer(nn.Module):
+class Transformer_ViT(nn.Module):
   def __init__(self, img_size, vis, num_layers = 12):
-    super(Transformer, self).__init__()
-    self.embeddings = Embeddings(img_size = img_size)
-    self.encoder = Encoder(vis, num_layers)
+    super(Transformer_ViT, self).__init__()
+    self.embeddings = Embeddings_ViT(img_size = img_size)
+    self.encoder = Encoder_ViT(vis, num_layers)
 
   def forward(self, input_ids):
     embedding_output, features = self.embeddings(input_ids)
@@ -951,7 +951,7 @@ def ViT(load_pretrained = True, num_layers = 12, vis = True):
               os.system("mv ViT-B_16.npz imagenet21k/ViT-B_16.npz >/dev/null 2>&1")
         except Exception as e:
             print(e)
-    net = Transformer(224, vis = vis, num_layers = num_layers)
+    net = Transformer_ViT(224, vis = vis, num_layers = num_layers)
     if load_pretrained == True:
         load_from(net, weights=np.load("imagenet21k/ViT-B_16.npz"))
     return net                   
