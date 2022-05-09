@@ -1455,7 +1455,7 @@ class CATS_Compressed(nn.Module):
     x15 = self.dc4(x14)
     x16 = self.segmentation_head(x15)
 
-    return x16 attn_weights
+    return x16, attn_weights
     
 ######################## Wrappers ########################
 
