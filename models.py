@@ -1,12 +1,3 @@
-import os
-import time
-import numpy as np
-import matplotlib.pyplot as plt
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import timm
-
 from __future__ import absolute_import, division, print_function
 import copy, logging, math
 from os.path import join as pjoin
@@ -18,6 +9,15 @@ import math
 
 from os.path import join as pjoin
 from collections import OrderedDict
+
+import os
+import time
+import numpy as np
+import matplotlib.pyplot as plt
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import timm
 
 import torch.nn.functional as F
 
