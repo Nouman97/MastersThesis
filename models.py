@@ -40,7 +40,7 @@ class DoubleConv(nn.Module):
 
 class UNET(nn.Module):
   def __init__(self, in_channels = 1, out_channels = 4):
-    super(UNET, self).__init__()
+    super().__init__()
 
     # Down
 
@@ -127,7 +127,7 @@ class DoubleConv(nn.Module):
 
 class UNET_Compressed(nn.Module):
   def __init__(self, in_channels = 1, out_channels = 4):
-    super(UNET_Compressed, self).__init__()
+    super().__init__()
 
     # Down
 
