@@ -1069,7 +1069,7 @@ class UNETR(nn.Module):
     features = [i.permute(0, 2, 1).reshape(n, c, 14, 14) for i in features]
 
     if len(self.layers_to_block) != 0:
-      features = [features[i] * 0 for i in range(len(features)) if i in self.layers_to_block]
+      features = [features[i] * 0 if i in self.layers_to_block else features[i] for i in range(len(features))]
     
     if self.all_trans == True:
         img = self.u01(features[0])
