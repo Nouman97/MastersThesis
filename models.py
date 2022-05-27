@@ -1180,7 +1180,7 @@ class UNETR_Compressed(nn.Module):
 
     self.layers_to_block = layers_to_block
 
-    self.trans = ViT(load_pretrained = pretrained, num_layers = 3)
+    self.trans = ViT(load_pretrained = pretrained, num_layers = 3, vis = vis)
 
     # image
 
