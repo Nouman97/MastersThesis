@@ -1289,9 +1289,9 @@ class DoubleConv(nn.Module):
     return self.conv(x)
 
 class CATS(nn.Module):
-  def __init__(self, num_classes = 4, pretrained = True, backbone = "resnet50", pretrained_backbone = True):
+  def __init__(self, num_classes = 4, pretrained = True, backbone = "resnet50", pretrained_backbone = True, vis = True):
     super().__init__()
-    self.trans = ViT(load_pretrained = pretrained)
+    self.trans = ViT(load_pretrained = pretrained, vis = vis)
 
     # image
     
@@ -1355,10 +1355,15 @@ class CATS(nn.Module):
     # dc5
 
     self.segmentation_head = nn.Conv2d(64, num_classes, 3, 1, 1)
+    
+    self.vis = vis
+    
 
   def forward(self, x):
-
-    features, attn_weights, _ = self.trans(x)
+    if self.vis == True:
+      features, attn_weights, _ = self.trans(x)
+    else:
+      features = self.trans(x)
     n, _, c = features[0].shape
     features = [i.permute(0, 2, 1).reshape(n, c, 14, 14) for i in features]
     
@@ -1401,7 +1406,10 @@ class CATS(nn.Module):
     x15 = self.dc4(x14)
     x16 = self.segmentation_head(x15)
 
-    return x16, attn_weights
+    if self.vis == True:
+      return x16, attn_weights
+    else:
+      return x16
     
 ######################## CATS Compressed ########################    
     
@@ -1435,9 +1443,9 @@ class DoubleConv(nn.Module):
     return self.conv(x)
 
 class CATS_Compressed(nn.Module):
-  def __init__(self, num_classes = 4, pretrained = True, backbone = "resnet50", pretrained_backbone = True):
+  def __init__(self, num_classes = 4, pretrained = True, backbone = "resnet50", pretrained_backbone = True, vis = True):
     super().__init__()
-    self.trans = ViT(load_pretrained = pretrained, num_layers = 3)
+    self.trans = ViT(load_pretrained = pretrained, num_layers = 3, vis = vis)
 
     # image
 
@@ -1468,10 +1476,15 @@ class CATS_Compressed(nn.Module):
     # dc5
 
     self.segmentation_head = nn.Conv2d(64, num_classes, 3, 1, 1)
+    
+    self.vis = vis
 
   def forward(self, x):
 
-    features, attn_weights, _ = self.trans(x)
+    if self.vis == True:
+      features, attn_weights, _ = self.trans(x)
+    else:
+      features = self.trans(x)
     n, _, c = features[0].shape
     features = [i.permute(0, 2, 1).reshape(n, c, 14, 14) for i in features]
     
@@ -1493,7 +1506,10 @@ class CATS_Compressed(nn.Module):
     x15 = self.dc4(x14)
     x16 = self.segmentation_head(x15)
 
-    return x16, attn_weights
+    if self.vis == True:
+      return x16, attn_weights
+    else:
+      return x16
     
 ######################## Wrappers ########################
 
