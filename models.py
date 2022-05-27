@@ -816,8 +816,8 @@ class Block_ViT(nn.Module):
     self.attention_norm = LayerNorm(768, eps = 1e-6)
     self.ffn_norm = LayerNorm(768, eps = 1e-6)
     self.ffn = Mlp_ViT()
-    self.attn = Attention(vis = self.vis)
     self.vis = vis
+    self.attn = Attention(vis = self.vis)
 
   def forward(self, x):
     h = x
