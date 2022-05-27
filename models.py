@@ -754,7 +754,10 @@ class Attention(nn.Module):
     attention_output = self.out(context_layer)
     attention_output = self.proj_dropout(attention_output)
 
-    return attention_output, weights
+    if self.vis == True:
+      return attention_output, weights
+    else:
+      return attention_output
 
 class Mlp_ViT(nn.Module):
   def __init__(self):
@@ -813,18 +816,26 @@ class Block_ViT(nn.Module):
     self.attention_norm = LayerNorm(768, eps = 1e-6)
     self.ffn_norm = LayerNorm(768, eps = 1e-6)
     self.ffn = Mlp_ViT()
-    self.attn = Attention(vis = True)
+    self.attn = Attention(vis = self.vis)
+    self.vis = vis
 
   def forward(self, x):
     h = x
     x = self.attention_norm(x)
-    x, weights = self.attn(x)
+    
+    if self.vis == True:
+      x, weights = self.attn(x)
+    else:
+      x = self.attn(x)
     x = x + h
     h = x
     x = self.ffn_norm(x)
     x = self.ffn(x)
     x = x + h
-    return x, weights
+    if self.vis == True:
+      return x, weights
+    else:
+      return x
 
   def load_from(self, weights, n_block):
         ROOT = f"Transformer/encoderblock_{n_block}"
@@ -870,7 +881,7 @@ class Encoder_ViT(nn.Module):
     self.layer = nn.ModuleList()
     self.encoder_norm = LayerNorm(768, eps = 1e-6)
     for _ in range(num_layers):
-      layer = Block_ViT(vis)
+      layer = Block_ViT(self.vis)
       self.layer.append(copy.deepcopy(layer))
 
   def forward(self, hidden_states):
@@ -878,28 +889,39 @@ class Encoder_ViT(nn.Module):
     
     features = []
     for layer_block in self.layer:
-      hidden_states, weights = layer_block(hidden_states)
-      features.append(hidden_states)
-      if self.vis:
+      if self.vis == True:
+        hidden_states, weights = layer_block(hidden_states)
         attn_weights.append(weights)
+      else:
+        hidden_states = layer_block(hidden_states)
+      features.append(hidden_states)        
 
     features = features[:-1]
 
     encoded = self.encoder_norm(hidden_states)
-
+    
     features.append(encoded)
-    return features, attn_weights
+    
+    if self.vis == True:
+      return features, attn_weights
+    else:
+      return features
 
 class Transformer_ViT(nn.Module):
   def __init__(self, img_size, vis, num_layers = 12):
     super(Transformer_ViT, self).__init__()
     self.embeddings = Embeddings_ViT(img_size = img_size)
     self.encoder = Encoder_ViT(vis, num_layers)
+    self.vis = vis
 
   def forward(self, input_ids):
     embedding_output, features = self.embeddings(input_ids)
-    encoded, attn_weights = self.encoder(embedding_output)
-    return encoded, attn_weights, features
+    if self.vis == True:
+      encoded, attn_weights = self.encoder(embedding_output)
+      return encoded, attn_weights, features
+    else:
+      encoded = self.encoder(embedding_output)
+      return encoded
 
 def load_from(model, weights):
   with torch.no_grad():
@@ -988,12 +1010,12 @@ class DoubleConv(nn.Module):
     return self.conv(x)
 
 class UNETR(nn.Module):
-  def __init__(self, num_classes = 4, all_trans = False, pretrained = True, layers_to_block = []):
+  def __init__(self, num_classes = 4, all_trans = False, pretrained = True, layers_to_block = [], vis = True):
     super().__init__()
 
     self.layers_to_block = layers_to_block
 
-    self.trans = ViT(load_pretrained = pretrained)
+    self.trans = ViT(load_pretrained = pretrained, vis = vis)
 
     # image
 
@@ -1061,10 +1083,15 @@ class UNETR(nn.Module):
     # dc5
 
     self.segmentation_head = nn.Conv2d(64, num_classes, 3, 1, 1)
+    
+    self.vis = vis
 
   def forward(self, x):
 
-    features, attn_weights, _ = self.trans(x)
+    if self.vis == True:
+      features, attn_weights, _ = self.trans(x)
+    else:
+      features = self.trans(x)
     n, _, c = features[0].shape
     features = [i.permute(0, 2, 1).reshape(n, c, 14, 14) for i in features]
 
@@ -1112,7 +1139,10 @@ class UNETR(nn.Module):
     x15 = self.dc4(x14)
     x16 = self.segmentation_head(x15)
 
-    return x16, attn_weights    
+    if self.vis == True:
+      return x16, attn_weights    
+    else:
+      return x16
     
 ######################## UNETR Compressed ########################    
     
@@ -1145,7 +1175,7 @@ class DoubleConv(nn.Module):
     return self.conv(x)
 
 class UNETR_Compressed(nn.Module):
-  def __init__(self, num_classes = 4, all_trans = False, pretrained = True, layers_to_block = []):
+  def __init__(self, num_classes = 4, all_trans = False, pretrained = True, layers_to_block = [], vis = True):
     super().__init__()
 
     self.layers_to_block = layers_to_block
@@ -1187,9 +1217,14 @@ class UNETR_Compressed(nn.Module):
     # dc5
 
     self.segmentation_head = nn.Conv2d(64, num_classes, 3, 1, 1)
+    
+    self.vis = vis
 
   def forward(self, x):
-    features, attn_weights, _ = self.trans(x)
+    if self.vis == True:
+      features, attn_weights, _ = self.trans(x)
+    else:
+      features = self.trans(x)
     n, _, c = features[0].shape
     features = [i.permute(0, 2, 1).reshape(n, c, 14, 14) for i in features]
 
@@ -1217,7 +1252,10 @@ class UNETR_Compressed(nn.Module):
     x15 = self.dc4(x14)
     x16 = self.segmentation_head(x15)
 
-    return x16, attn_weights
+    if self.vis == True:
+      return x16, attn_weights
+    else:
+      return x16
     
 ######################## CATS ########################    
     
