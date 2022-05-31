@@ -165,7 +165,7 @@ class UNET_Compressed(nn.Module):
     return out 
     
 ######################## TransUNet ########################    
-    
+
 ATTENTION_Q = "MultiHeadDotProductAttention_1/query"
 ATTENTION_K = "MultiHeadDotProductAttention_1/key"
 ATTENTION_V = "MultiHeadDotProductAttention_1/value"
@@ -382,7 +382,10 @@ class Attention(nn.Module):
     attention_output = self.out(context_layer)
     attention_output = self.proj_dropout(attention_output)
 
-    return attention_output, weights
+    if self.vis == True:
+      return attention_output, weights
+    else:
+      return attention_output
 
 class Mlp(nn.Module):
   def __init__(self):
@@ -446,18 +449,25 @@ class Block(nn.Module):
     self.attention_norm = LayerNorm(768, eps = 1e-6)
     self.ffn_norm = LayerNorm(768, eps = 1e-6)
     self.ffn = Mlp()
-    self.attn = Attention(vis = True)
+    self.attn = Attention(vis = vis)
+    self.vis = vis
 
   def forward(self, x):
     h = x
     x = self.attention_norm(x)
-    x, weights = self.attn(x)
+    if self.vis == True:
+      x, weights = self.attn(x)
+    else:
+      x = self.attn(x)
     x = x + h
     h = x
     x = self.ffn_norm(x)
     x = self.ffn(x)
     x = x + h
-    return x, weights
+    if self.vis == True:
+      return x, weights
+    else:
+      return x
 
   def load_from(self, weights, n_block):
         ROOT = f"Transformer/encoderblock_{n_block}"
@@ -505,28 +515,40 @@ class Encoder(nn.Module):
     for _ in range(num_layers):
       layer = Block(vis)
       self.layer.append(copy.deepcopy(layer))
+    self.vis = vis
 
   def forward(self, hidden_states):
     attn_weights = []
     count = 1
     for layer_block in self.layer:
       count += 1
-      hidden_states, weights = layer_block(hidden_states)
-      if self.vis:
+      if self.vis == True:
+        hidden_states, weights = layer_block(hidden_states)
         attn_weights.append(weights)
+      else:
+        hidden_states = layer_block(hidden_states)
     encoded = self.encoder_norm(hidden_states)
-    return encoded, attn_weights
+    if self.vis == True:
+      return encoded, attn_weights
+    else:
+      return encoded
 
 class Transformer(nn.Module):
   def __init__(self, img_size, vis, num_layers = 12):
     super(Transformer, self).__init__()
     self.embeddings = Embeddings(img_size = img_size)
     self.encoder = Encoder(vis, num_layers)
+    self.vis = vis
 
   def forward(self, input_ids):
     embedding_output, features = self.embeddings(input_ids)
-    encoded, attn_weights = self.encoder(embedding_output)
-    return encoded, attn_weights, features
+    
+    if self.vis == True:
+      encoded, attn_weights = self.encoder(embedding_output)
+      return encoded, attn_weights, features
+    else:
+      encoded = self.encoder(embedding_output)
+      return encoded, features
 
 class Conv2dReLU(nn.Sequential):
   def __init__(self, in_channels, out_channels, kernel_size, padding = 0, stride = 1, use_batchnorm = True):
@@ -607,14 +629,21 @@ class VisionTransformer(nn.Module):
     self.segmentation_head = SegmentationHead(
         in_channels = (256, 128, 64, 16)[-1], out_channels = num_classes, kernel_size = 3
     )
+    self.vis = vis
 
   def forward(self, x):
     if x.size()[1] == 1:
       x = x.repeat(1, 3, 1, 1)
-    x, attn_weights, features = self.transformer(x)
+    if self.vis == True:
+      x, attn_weights, features = self.transformer(x)
+    else:
+      x, features = self.transformer(x)
     x = self.decoder(x, features)
     logits = self.segmentation_head(x)
-    return logits, attn_weights, features
+    if self.vis == True:
+      return logits, attn_weights, features
+    else:
+      return logits
 
   def load_from(self, weights):
     with torch.no_grad():
@@ -678,7 +707,7 @@ def TransUNet(num_classes = 4, load_pretrained = True, num_layers = 12, vis = Tr
     net = VisionTransformer(num_classes = num_classes, num_layers = num_layers, vis = vis)
     if load_pretrained == True:
         net.load_from(weights=np.load("imagenet21k/R50+ViT-B_16.npz"))
-    return net                      
+    return net                        
 
 ######################## ViT ########################
 
