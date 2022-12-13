@@ -1286,6 +1286,91 @@ class UNETR_Compressed(nn.Module):
     else:
       return x16
     
+######################## UNETR Compressed Single Layer ########################    
+
+class UNETR_Compressed_Single_Layer(nn.Module):
+  def __init__(self, num_classes = 4, all_trans = False, pretrained = True, layers_to_block = [], vis = True):
+    super().__init__()
+
+    self.layers_to_block = layers_to_block
+
+    self.trans = ViT(load_pretrained = pretrained, num_layers = 3, vis = vis)
+
+    # image
+
+    self.all_trans = all_trans
+    
+    if self.all_trans == True:    
+        self.u01 = Deconv(768, 512)
+        self.u02 = Deconv(512, 256)
+        self.u03 = Deconv(256, 128)
+        self.u04 = Deconv(128, 64)
+    else:
+        self.img_conv = DoubleConv(3, 64)
+        
+    # z3
+
+    # n x 384 x 14 x 14
+    self.u11 = Deconv(768, 512)
+    self.u12 = Deconv(512, 256)
+    self.u13 = Deconv(256, 128)
+
+
+    # dc3
+
+    self.dc3 = DoubleConv(128, 128)
+
+    # du3
+
+    self.du3 = nn.ConvTranspose2d(128, 64, 2, 2)
+
+    # dc4
+
+    self.dc4 = DoubleConv(128, 64)
+
+    # dc5
+
+    self.segmentation_head = nn.Conv2d(64, num_classes, 3, 1, 1)
+    
+    self.vis = vis
+
+  def forward(self, x):
+    if self.vis == True:
+      features, attn_weights, _ = self.trans(x)
+    else:
+      features = self.trans(x)
+    n, _, c = features[0].shape
+    features = [i.permute(0, 2, 1).reshape(n, c, 14, 14) for i in features]
+
+    if len(self.layers_to_block) != 0:
+      features = [features[i] * 0 for i in range(len(features)) if i in self.layers_to_block]
+    
+    if self.all_trans == True:
+        img = self.u01(features[0])
+        img = self.u02(img)
+        img = self.u03(img)
+        img = self.u04(img)
+    else:
+        img = self.img_conv(x)
+    
+    x1 = self.u11(features[0])
+    x1 = self.u12(x1)
+    x1 = self.u13(x1)
+
+    
+    x12 = self.dc3(x1)
+    x13 = self.du3(x12)
+   
+    x14 = torch.cat((img, x13), 1)
+   
+    x15 = self.dc4(x14)
+    x16 = self.segmentation_head(x15)
+
+    if self.vis == True:
+      return x16, attn_weights
+    else:
+      return x16
+    
 ######################## CATS ########################    
     
 class Deconv(nn.Module):
