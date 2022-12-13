@@ -1294,7 +1294,7 @@ class UNETR_Compressed_Single_Layer(nn.Module):
 
     self.layers_to_block = layers_to_block
 
-    self.trans = ViT(load_pretrained = pretrained, num_layers = 3, vis = vis)
+    self.trans = ViT(load_pretrained = pretrained, num_layers = 1, vis = vis)
 
     # image
 
